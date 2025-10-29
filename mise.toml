@@ -1,0 +1,17 @@
+[tasks.wf-install]
+description = "Install dependencies with Node"
+tools.node = "22"
+run = "cd .github/workflows && npm install"
+
+[tasks.wf-install-ci]
+description = "Install only production dependencies"
+tools.node = "22"
+run = "cd .github/workflows && npm ci --omit=dev"
+
+[tasks.wf-build]
+tools.node = "22"
+run = ".github/workflows/utils/build-cli.ts"
+
+[tasks.wf-watch]
+tools.node = "22"
+run = "node --watch --no-warnings .github/workflows/utils/build-cli.ts"
