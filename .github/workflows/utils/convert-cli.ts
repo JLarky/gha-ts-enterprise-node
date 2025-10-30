@@ -27,10 +27,11 @@ const help = process.argv.includes("--help");
 const force = process.argv.includes("--force");
 const remove = process.argv.includes("--remove");
 const useJsonToJavascript = !process.argv.includes("--no-lines");
+const noComments = process.argv.includes("--no-comments");
 
 if (args.length === 0 || help) {
   console.error(
-    "Usage: convert-cli.ts <workflow-files> [--force] [--remove] [--no-lines]"
+    "Usage: convert-cli.ts <workflow-files> [--force] [--remove] [--no-lines] [--no-comments]"
   );
   console.error("Example: convert-cli.ts .github/workflows/*.yml");
   console.error("Options:");
@@ -41,7 +42,10 @@ if (args.length === 0 || help) {
     "  --remove: Automatically remove original YAML files after conversion"
   );
   console.error(
-    "  --no-lines: Do not use lines helper to format multiline strings"
+    "  --no-lines: Do not use lines helper to format multiline strings (faster conversion)"
+  );
+  console.error(
+    "  --no-comments: Do not extract comments from YAML files (faster conversion)"
   );
   process.exit(help ? 0 : 1);
 }
@@ -74,6 +78,16 @@ console.log();
 
 for (const file of files) {
   const inputContent = await readFile(file, "utf8");
+  let { json, template, jsonPlaceholder, commentsPlaceholder } =
+    yamlToWfTemplate(inputContent);
+
+  if (noComments) {
+    template = template.replace(commentsPlaceholder, "");
+  } else {
+    const comments = await extractComments(file);
+    template = template.replace(commentsPlaceholder, comments);
+  }
+
   // rename .yml|.yaml -> .main.ts; remove `.generated`
   const outFileName = file
     .replace(/\.yml|\.yaml$/, ".main.ts")
@@ -82,9 +96,9 @@ for (const file of files) {
   const goodToGo = force || !fileExists || (await confirm(outFileName));
   if (goodToGo) {
     if (useJsonToJavascript) {
-      await jsonToJavascript(inputContent, outFileName);
+      await jsonToJavascript(json, template, jsonPlaceholder, outFileName);
     } else {
-      await createYaml(inputContent, outFileName);
+      await createYaml(json, template, jsonPlaceholder, outFileName);
     }
     // chmod +x to make it executable
     await chmod(outFileName, 0o755);
@@ -132,9 +146,12 @@ async function confirm(filename: string) {
   return name.trim().toLowerCase() === "y";
 }
 
-async function jsonToJavascript(inputContent: string, outFileName: string) {
-  const { json, template, jsonPlaceholder } = yamlToWfTemplate(inputContent);
-  // inputContent
+async function jsonToJavascript(
+  json: unknown,
+  template: string,
+  jsonPlaceholder: string,
+  outFileName: string
+) {
   const tmpInputFile = join(tmpdir(), "convert-cli.yml");
   writeFileSync(tmpInputFile, JSON.stringify(json));
   const [prefix, suffix] = template.split(jsonPlaceholder) as [string, string];
@@ -152,9 +169,23 @@ async function jsonToJavascript(inputContent: string, outFileName: string) {
   ]);
 }
 
-async function createYaml(inputContent: string, outFileName: string) {
-  const { json, template, jsonPlaceholder } = yamlToWfTemplate(inputContent);
+async function createYaml(
+  json: unknown,
+  template: string,
+  jsonPlaceholder: string,
+  outFileName: string
+) {
   const [prefix, suffix] = template.split(jsonPlaceholder) as [string, string];
 
   await writeFile(outFileName, prefix + JSON.stringify(json, null, 2) + suffix);
+}
+
+async function extractComments(inputFilename: string) {
+  // npx @jlarky/extract-yaml-comments@0.0.2 .github/workflows/hello-world.generated.yml
+  const { stdout } = await execFile("npx", [
+    "-y",
+    "@jlarky/extract-yaml-comments@0.0.2",
+    inputFilename,
+  ]);
+  return stdout;
 }

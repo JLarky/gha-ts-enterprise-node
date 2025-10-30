@@ -29,9 +29,15 @@ export function yamlToWfTemplate(yaml: string) {
     
     import { generateWorkflowYaml } from "./utils/yaml.ts";
 
+    COMMENTS_PLACEHOLDER
     const wf = workflow(JSON_PLACEHOLDER);
 
     await generateWorkflowYaml(wf, import.meta.url);
   `);
-  return { json: load(yaml), template, jsonPlaceholder: "JSON_PLACEHOLDER" };
+  return {
+    json: load(yaml),
+    template,
+    jsonPlaceholder: "JSON_PLACEHOLDER",
+    commentsPlaceholder: "COMMENTS_PLACEHOLDER",
+  };
 }
