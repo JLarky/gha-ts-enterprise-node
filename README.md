@@ -40,6 +40,7 @@ For best results make sure to have `check-gha-ts-workflows-converted` workflow (
 │   ├── actionlint.generated.yml                       # Generated
 │   ├── hello-world.main.ts                            # Example workflow definition
 │   └── hello-world.generated.yml                      # Generated
+├── .gitattributes                                     # Mark generated files in github ui
 ├── package.json                                       # Dependencies
 ├── package-lock.json                                  # Locked dependencies
 ├── tsconfig.json                                      # TypeScript configuration
