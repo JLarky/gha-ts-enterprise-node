@@ -20,7 +20,7 @@ const wf = workflow({
         setupNodeStep({ "node-version": "22" }),
         {
           name: "Install production dependencies",
-          run: lines("cd .github/workflows && npm ci --production"),
+          run: lines("cd .github/workflows && npm ci --omit=dev"),
         },
         {
           name: "Clear generated workflows",

@@ -20,7 +20,7 @@ jobs:
           node-version: "22"
       - name: Install production dependencies
         run: |
-          cd .github/workflows && npm ci --production
+          cd .github/workflows && npm ci --omit=dev
       - name: Clear generated workflows
         run: |
           rm -f .github/workflows/*.generated.yml
