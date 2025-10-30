@@ -138,12 +138,13 @@ Build script that discovers and executes all `.main.ts` workflow files, generati
 Convert existing YAML workflow files to TypeScript definitions. Usage:
 
 ```bash
-.github/workflows/utils/convert-cli.ts .github/workflows/*.yml [--force] [--remove]
+.github/workflows/utils/convert-cli.ts .github/workflows/*.yml [--force] [--remove] [--no-lines]
 ```
 
 Options:
 - `--force`: Overwrite existing TypeScript files without prompting
 - `--remove`: Automatically remove original YAML files after conversion
+- `--no-lines`: Do not use lines helper to format multiline strings
 
 ## Customization
 

@@ -10,19 +10,39 @@
  * And see the magic happen.
  */
 import { chmod, glob, readFile, unlink, writeFile } from "node:fs/promises";
+import { execFile as execFileCallback } from "node:child_process";
+import { promisify } from "node:util";
 import { createInterface } from "node:readline/promises";
-import { yamlToWf } from "./yaml.ts";
+import { yamlToWfTemplate } from "./yaml.ts";
 import { existsSync } from "node:fs";
+import { tmpdir } from "os";
+import { join } from "path";
+import { writeFileSync } from "fs";
+
+const execFile = promisify(execFileCallback);
 
 const args = process.argv.slice(2).filter((arg) => !arg.startsWith("--"));
 
 const help = process.argv.includes("--help");
 const force = process.argv.includes("--force");
 const remove = process.argv.includes("--remove");
+const useJsonToJavascript = !process.argv.includes("--no-lines");
 
 if (args.length === 0 || help) {
-  console.error("Usage: convert-cli.ts <workflow-files> [--force] [--remove]");
+  console.error(
+    "Usage: convert-cli.ts <workflow-files> [--force] [--remove] [--no-lines]"
+  );
   console.error("Example: convert-cli.ts .github/workflows/*.yml");
+  console.error("Options:");
+  console.error(
+    "  --force: Overwrite existing TypeScript files without prompting"
+  );
+  console.error(
+    "  --remove: Automatically remove original YAML files after conversion"
+  );
+  console.error(
+    "  --no-lines: Do not use lines helper to format multiline strings"
+  );
   process.exit(help ? 0 : 1);
 }
 
@@ -61,7 +81,11 @@ for (const file of files) {
   const fileExists = existsSync(outFileName);
   const goodToGo = force || !fileExists || (await confirm(outFileName));
   if (goodToGo) {
-    await writeFile(outFileName, yamlToWf(inputContent));
+    if (useJsonToJavascript) {
+      await jsonToJavascript(inputContent, outFileName);
+    } else {
+      await createYaml(inputContent, outFileName);
+    }
     // chmod +x to make it executable
     await chmod(outFileName, 0o755);
     console.log(`Wrote ${outFileName}`);
@@ -106,4 +130,31 @@ async function confirm(filename: string) {
   );
   rl.close();
   return name.trim().toLowerCase() === "y";
+}
+
+async function jsonToJavascript(inputContent: string, outFileName: string) {
+  const { json, template, jsonPlaceholder } = yamlToWfTemplate(inputContent);
+  // inputContent
+  const tmpInputFile = join(tmpdir(), "convert-cli.yml");
+  writeFileSync(tmpInputFile, JSON.stringify(json));
+  const [prefix, suffix] = template.split(jsonPlaceholder) as [string, string];
+  // oxlint-disable no-useless-spread
+  await execFile("npx", [
+    "-y",
+    "@jlarky/json-to-javascript@0.0.7",
+    ...["--prefix", prefix],
+    ...["--suffix", suffix],
+    ...["--useDedent", "true"],
+    ...["--dedentPrefix", "lines"],
+    ...["--jsonStringifySpace", "2"],
+    ...["--inputFile", tmpInputFile],
+    ...["--outputFile", outFileName],
+  ]);
+}
+
+async function createYaml(inputContent: string, outFileName: string) {
+  const { json, template, jsonPlaceholder } = yamlToWfTemplate(inputContent);
+  const [prefix, suffix] = template.split(jsonPlaceholder) as [string, string];
+
+  await writeFile(outFileName, prefix + JSON.stringify(json, null, 2) + suffix);
 }

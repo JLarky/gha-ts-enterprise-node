@@ -1,5 +1,5 @@
 import { dump, load } from "js-yaml";
-import { createSerializer, type Stringify } from "@jlarky/gha-ts/render";
+import type { Stringify } from "@jlarky/gha-ts/render";
 import type { Workflow } from "@jlarky/gha-ts/workflow-types";
 import { generateWorkflow } from "@jlarky/gha-ts/cli";
 import { lines } from "@jlarky/gha-ts/utils";
@@ -21,20 +21,17 @@ export async function generateWorkflowYaml(
   return generateWorkflow(workflow, stringifyYaml, moduleUrl);
 }
 
-export function yamlToWf(ymlText: string) {
-  const yaml = load(ymlText) as Workflow;
-  const jsonStr = createSerializer(yaml, JSON.stringify)
-    .setHeader("")
-    .stringifyWorkflow();
-
-  return lines(`
+export function yamlToWfTemplate(yaml: string) {
+  const template = lines(`
     #!/usr/bin/env -S node --no-warnings
     import { workflow } from "@jlarky/gha-ts/workflow-types";
-
+    import { lines } from "@jlarky/gha-ts/utils";
+    
     import { generateWorkflowYaml } from "./utils/yaml.ts";
 
-    const wf = workflow(${jsonStr});
+    const wf = workflow(JSON_PLACEHOLDER);
 
     await generateWorkflowYaml(wf, import.meta.url);
   `);
+  return { json: load(yaml), template, jsonPlaceholder: "JSON_PLACEHOLDER" };
 }
