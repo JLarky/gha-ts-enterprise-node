@@ -15,4 +15,5 @@ jobs:
         with:
           fetch-depth: 0
       - name: Test
-        run: echo 'Hello, world!'
+        run: |
+          echo 'Hello, world!'

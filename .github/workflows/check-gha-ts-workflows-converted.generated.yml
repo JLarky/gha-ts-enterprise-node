@@ -19,13 +19,16 @@ jobs:
         with:
           node-version: "22"
       - name: Install production dependencies
-        run: cd .github/workflows && npm ci --production
+        run: |
+          cd .github/workflows && npm ci --production
       - name: Clear generated workflows
-        run: rm -f .github/workflows/*.generated.yml
+        run: |
+          rm -f .github/workflows/*.generated.yml
       - name: Generate TS workflows to yaml
-        run: .github/workflows/utils/build-cli.ts
+        run: |
+          .github/workflows/utils/build-cli.ts
       - name: Verify if TS workflows are converted
-        run: |-
+        run: |
           CHANGED="$(git --no-pager diff --name-only)";
           if [ -n "$CHANGED" ]; then
             echo "::error title=TS workflows are not up to date::Run 'mise run wf-build' locally, commit, and push.";

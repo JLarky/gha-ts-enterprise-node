@@ -3,11 +3,11 @@
   "type": "module",
   "private": true,
   "dependencies": {
-    "@jlarky/gha-ts": "^0.1.2",
+    "@jlarky/gha-ts": "^0.1.4",
     "js-yaml": "^4.1.0"
   },
   "devDependencies": {
     "@types/js-yaml": "^4.0.9",
-    "@types/node": "^24.9.1"
+    "@types/node": "^24.9.2"
   }
 }
