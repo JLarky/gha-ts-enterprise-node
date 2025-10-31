@@ -9,7 +9,15 @@
  *
  * And see the magic happen.
  */
-import { chmod, glob, readFile, unlink, writeFile } from "node:fs/promises";
+import {
+  chmod,
+  glob,
+  mkdir,
+  readFile,
+  rmdir,
+  unlink,
+  writeFile,
+} from "node:fs/promises";
 import { execFile as execFileCallback } from "node:child_process";
 import { promisify } from "node:util";
 import { createInterface } from "node:readline/promises";
@@ -49,6 +57,8 @@ if (args.length === 0 || help) {
   );
   process.exit(help ? 0 : 1);
 }
+
+const tmpMap = new Map<string, string>();
 
 const files: string[] = [];
 const globs: string[] = [];
@@ -119,6 +129,11 @@ for (const file of files) {
   }
 }
 
+for (const [_packageName, tmp] of tmpMap) {
+  console.log(`Cleaning up ${tmp}`);
+  await rmdir(tmp, { recursive: true });
+}
+
 console.log();
 console.log("To generate YAML files from newly generated TS files, run:");
 console.log(".github/workflows/utils/build-cli.ts");
@@ -152,21 +167,24 @@ async function jsonToJavascript(
   jsonPlaceholder: string,
   outFileName: string
 ) {
-  const tmpInputFile = join(tmpdir(), "convert-cli.yml");
+  const tmpInputFile = join(tmpdir(), "convert-cli." + randomString() + ".yml");
   writeFileSync(tmpInputFile, JSON.stringify(json));
   const [prefix, suffix] = template.split(jsonPlaceholder) as [string, string];
   // oxlint-disable no-useless-spread
-  await execFile("npx", [
-    "-y",
+  await fasterNpx(
     "@jlarky/json-to-javascript@0.0.7",
-    ...["--prefix", prefix],
-    ...["--suffix", suffix],
-    ...["--useDedent", "true"],
-    ...["--dedentPrefix", "lines"],
-    ...["--jsonStringifySpace", "2"],
-    ...["--inputFile", tmpInputFile],
-    ...["--outputFile", outFileName],
-  ]);
+    "./node_modules/.bin/json-to-javascript",
+    [
+      ...["--prefix", prefix],
+      ...["--suffix", suffix],
+      ...["--useDedent", "true"],
+      ...["--dedentPrefix", "lines"],
+      ...["--jsonStringifySpace", "2"],
+      ...["--inputFile", tmpInputFile],
+      ...["--outputFile", outFileName],
+    ]
+  );
+  await unlink(tmpInputFile);
 }
 
 async function createYaml(
@@ -181,11 +199,29 @@ async function createYaml(
 }
 
 async function extractComments(inputFilename: string) {
-  // npx @jlarky/extract-yaml-comments@0.0.2 .github/workflows/hello-world.generated.yml
-  const { stdout } = await execFile("npx", [
-    "-y",
-    "@jlarky/extract-yaml-comments@0.0.2",
-    inputFilename,
-  ]);
+  const { stdout } = await fasterNpx(
+    "@jlarky/extract-yaml-comments@0.0.4",
+    "./node_modules/.bin/extract-yaml-comments",
+    [inputFilename]
+  );
   return stdout;
+}
+
+export async function fasterNpx(
+  packageName: string,
+  bin: string,
+  args: string[]
+) {
+  let tmp = tmpMap.get(packageName);
+  if (!tmp) {
+    tmp = join(tmpdir(), "faster-npx." + randomString());
+    tmpMap.set(packageName, tmp);
+    await mkdir(tmp, { recursive: true });
+    await execFile("npm", ["install", packageName], { cwd: tmp });
+  }
+  return execFile(join(tmp, bin), args);
+}
+
+function randomString() {
+  return Math.random().toString(36).substring(2, 15);
 }
