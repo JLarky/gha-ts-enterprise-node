@@ -11,7 +11,7 @@ For best results make sure to have `check-gha-ts-workflows-converted` workflow (
 ## Dependencies
 
 - [@jlarky/gha-ts](https://github.com/JLarky/gha-ts) tiny dependency that adds type-safety to GitHub workflows
-- Node.js 22 or later (older versions could work if you use `tsx`/`ts-node` or use `.js` with jsdoc); could be replaced with Bun or Deno
+- Node.js 22.18+ or later (older versions could work if you use `tsx`/`ts-node` or use `.js` with jsdoc); could be replaced with Bun or Deno
 - [Mise](https://mise.jdx.dev/) is an optional dependency for local development (examples how to use it in CI coming soon)
 - js-yaml is an optional dependency to serialize YAML workflows in a nice human-readable way, JSON.stringify could be used for 0 dependency setup
 

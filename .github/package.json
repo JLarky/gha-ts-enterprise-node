@@ -8,6 +8,10 @@
   },
   "devDependencies": {
     "@types/js-yaml": "^4.0.9",
-    "@types/node": "^24.9.2"
+    "@types/node": "^24.9.2",
+    "typescript": "^5.9.3"
+  },
+  "scripts": {
+    "type-check": "tsc --noEmit"
   }
 }

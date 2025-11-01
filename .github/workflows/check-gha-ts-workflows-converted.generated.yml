@@ -8,6 +8,19 @@ name: Check gha-ts workflows converted
       - main
   pull_request: {}
 jobs:
+  checkTypeScript:
+    name: Check TypeScript
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Install dependencies
+        run: |
+          cd .github/workflows && npm ci
+      - name: Check TypeScript
+        run: |
+          cd .github/workflows && npm run type-check
   checkGhaTsWorkflowsConverted:
     name: Check gha-ts workflows converted
     runs-on: ubuntu-latest
