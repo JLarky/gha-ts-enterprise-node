@@ -8,6 +8,11 @@ description = "Install only production dependencies"
 tools.node = "22"
 run = "cd .github/workflows && npm ci --omit=dev"
 
+[tasks.wf-check]
+description = "Check TypeScript"
+tools.node = "22"
+run = "cd .github/workflows && npm run type-check"
+
 [tasks.wf-build]
 tools.node = "22"
 run = ".github/workflows/utils/build-cli.ts"
