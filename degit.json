@@ -1,6 +1,11 @@
 [
   {
     "action": "remove",
-    "files": ["LICENSE", "README.md", ".prettierignore"]
+    "files": [
+      "LICENSE",
+      "README.md",
+      ".prettierignore",
+      ".cursor/worktrees.json"
+    ]
   }
 ]
