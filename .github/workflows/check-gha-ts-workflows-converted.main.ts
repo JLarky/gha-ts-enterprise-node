@@ -12,6 +12,21 @@ const wf = workflow({
     pull_request: {},
   },
   jobs: {
+    checkTypeScript: {
+      name: "Check TypeScript",
+      "runs-on": "ubuntu-latest",
+      steps: [
+        checkoutStep({ "fetch-depth": 0 }),
+        {
+          name: "Install dependencies",
+          run: lines("cd .github/workflows && npm ci"),
+        },
+        {
+          name: "Check TypeScript",
+          run: lines("cd .github/workflows && npm run type-check"),
+        },
+      ],
+    },
     checkGhaTsWorkflowsConverted: {
       name: "Check gha-ts workflows converted",
       "runs-on": "ubuntu-latest",
