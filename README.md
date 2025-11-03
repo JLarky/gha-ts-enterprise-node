@@ -18,10 +18,11 @@ For best results make sure to have `check-gha-ts-workflows-converted` workflow (
 ## Features
 
 - **TypeScript workflows**: Author workflows with strong typing and validation
-- **Modular utilities**: Custom utilities in `.github/workflows/utils/` for code reuse
+- **Modular utilities**: Custom utilities in `.github/workflows/utils/` for code reuse and action version locking
 - **Node.js compatible**: Uses Node.js with `js-yaml` for YAML generation (no Bun or tsx/ts-node required)
 - **Custom YAML serialization**: Fine-tuned YAML output with consistent formatting
 - **YAML to TypeScript conversion**: Automatically convert existing YAML workflows to TypeScript
+- **Production grade utilities**: This example provides [actionlint](https://github.com/rhysd/actionlint) configured out of the box
 
 ## Structure
 
