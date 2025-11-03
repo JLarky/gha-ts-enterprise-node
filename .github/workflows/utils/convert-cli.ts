@@ -172,7 +172,7 @@ async function jsonToJavascript(
   const [prefix, suffix] = template.split(jsonPlaceholder) as [string, string];
   // oxlint-disable no-useless-spread
   await fasterNpx(
-    "@jlarky/json-to-javascript@0.0.8",
+    "@jlarky/json-to-javascript@0.1.0",
     "./node_modules/.bin/json-to-javascript",
     [
       ...["--prefix", prefix],
