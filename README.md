@@ -191,18 +191,20 @@ Go to your existing project and run:
 npx tiged JLarky/gha-ts-enterprise-node gha-ts-enterprise-node
 ```
 
-- Make sure that you are running Node 24 or Node 22.18+.
-
-```bash
-node --version
-```
-
 I advise you to figure out what exactly you will need long term, but for this guide You'll only need these:
 
 ```bash
 cp gha-ts-enterprise-node/.github/{.gitignore,package.json,tsconfig.json} .github/
 cp gha-ts-enterprise-node/.github/workflows/check-gha-ts-workflows-converted.main.ts .github/workflows/
 cp -r gha-ts-enterprise-node/.github/workflows/utils .github/workflows/
+```
+
+(this part is optional, but recommended)
+
+```bash
+cp gha-ts-enterprise-node/mise.toml . # to get `mise wf-build` and `mise wf-watch` tasks
+cp gha-ts-enterprise-node/.github/.gitattributes .github/ # to mark generated files in github ui
+cp gha-ts-enterprise-node/.github/workflows/{actionlint,check-gha-ts-workflows-converted}.main.ts .github/workflows/ # lints your yaml
 rm -r gha-ts-enterprise-node
 ```
 
@@ -217,9 +219,17 @@ Now we can install the dependencies:
 
 ```bash
 (cd .github && npm install)
+git add .github/package-lock.json
+git commit -m "install gha-ts"
 ```
 
-And for the YOLO mode run this:
+Make sure that you are running Node 24 or Node 22.18+.
+
+```bash
+node --version
+```
+
+And for the YOLO mode run this to convert all existing workflows to use gha-ts (careful, `--remove` will remove all your existing yaml files, if you don't want YOLO just run it without flags):
 
 ```bash
 .github/workflows/utils/convert-cli.ts .github/workflows/*.yml --force --remove
@@ -252,6 +262,9 @@ npx prettier --write '.github/workflows/*.main.ts'
 git add '.github/workflows/*.main.ts'
 git commit -m "format code"
 ```
+
+As for generated yaml files you should probably add `.github/workflows/*.generated.yml` to
+your `.prettierignore` (not `.gitignore`) file, or run prettier in the `utils/build-cli.ts`.
 
 Now at this point you are done with automated steps. Next thing to fix is that since file
 names changed you might need to update things like workflow_call to rename `.yml` files to
@@ -286,8 +299,8 @@ If you have access to node 22.18+ or later you can run `.github/workflows/utils/
 regenerate yaml files and check that you didn't break anything. For order version use `npx tsx`.
 
 First, if you have access to typescript LSP you might notice that some values like booleans should
-be replaced with strings like `'true'` or `'false'` instead of `true` or `false`. And some values
-like `workflow_dispatch: null` should be replaced with `workflow_dispatch: {}`.
+be replaced with strings like `'true'` or `'false'` instead of `true` or `false` (if type allows).
+And some values like `workflow_dispatch: null` should be replaced with `workflow_dispatch: {}`.
 
 Second, focus on any references that could be there in the form of `.github/workflows/filename.yml`
 and update them to be `.github/workflows/filename.generated.yml` or `filename.main.ts` depending on
