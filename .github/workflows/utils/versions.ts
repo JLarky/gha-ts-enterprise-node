@@ -8,6 +8,7 @@
 export const actionVersions = {
   // chose what actions you are okay using the latest version of
   "actions/checkout@v5": "actions/checkout@v5",
+  "actions/github-script@v8": "actions/github-script@v8",
   // and which you want to pin to a specific version
   "actions/setup-node@v5":
     "actions/setup-node@dda4788290998366da86b6a4f497909644397bb2",
