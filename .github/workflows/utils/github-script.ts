@@ -6,7 +6,7 @@ export type AsyncFunctionArguments = {
   core: typeof import("@actions/core");
   // github: ReturnType<typeof import("@actions/github").getOctokit>;
   // octokit: ReturnType<typeof import("@actions/github").getOctokit>;
-  exec: typeof import("@actions/exec");
+  // exec: typeof import("@actions/exec");
   // glob: typeof import("@actions/glob");
   // io: typeof import("@actions/io");
   /**

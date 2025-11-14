@@ -53,45 +53,40 @@ const wf = workflow({
         {
           name: "Verify if TS workflows are converted",
           ...githubScriptStep({
-            script: githubScriptToString(async ({ exec, core }) => {
+            script: githubScriptToString(async ({ core }) => {
               const fs = await import("node:fs");
+              const { execFileSync } = await import("node:child_process");
 
               // Get changed files (includes both modified tracked files and untracked files)
-              let changedFiles = "";
-              await exec.exec("git", ["status", "--porcelain"], {
-                listeners: {
-                  stdout: (data) => {
-                    changedFiles += data.toString();
-                  },
-                },
-              });
+              const changedFiles = execFileSync("git", [
+                "status",
+                "--porcelain",
+              ]).toString();
 
               // Parse git status output to extract filenames
               // Format: "XY filename" where XY is status code (e.g., " M", "??")
               // For renames: "R  old -> new" or "R100 old -> new" -> extract only "new"
+              // Match bash logic: sed -E 's/^.. //' | sed -E 's/.* -> //'
               const files = changedFiles
                 .trim()
                 .split("\n")
                 .filter((line) => line.length > 0)
                 .map((line) => {
-                  // Remove status code (first 2 chars + space = 3 chars minimum)
-                  // For renames with similarity: "R100 old -> new" (status can be longer)
-                  // So we remove up to the first space after status code
-                  const firstSpaceIndex = line.indexOf(" ", 2);
-                  if (firstSpaceIndex === -1) {
+                  // Remove first 2 characters (status code) and the space after them
+                  // Equivalent to: sed -E 's/^.. //'
+                  if (line.length < 3) {
                     return "";
                   }
-                  const afterStatus = line
-                    .substring(firstSpaceIndex + 1)
-                    .trim();
-                  // Check if this is a rename entry (contains " -> ")
-                  const renameMatch = afterStatus.match(/^.+ -> (.+)$/);
-                  if (renameMatch && renameMatch[1]) {
-                    // Extract only the new filename after " -> "
-                    return renameMatch[1];
+                  let filename = line.substring(3);
+
+                  // If there's a " -> " pattern (rename), remove everything up to and including it
+                  // Equivalent to: sed -E 's/.* -> //'
+                  const renameIndex = filename.indexOf(" -> ");
+                  if (renameIndex !== -1) {
+                    filename = filename.substring(renameIndex + 4);
                   }
-                  // For non-rename entries, return the filename as-is
-                  return afterStatus;
+
+                  return filename.trim();
                 })
                 .filter((f) => f.length > 0);
 
