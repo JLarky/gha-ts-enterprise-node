@@ -48,9 +48,9 @@ jobs:
               async ({ exec, core }) => {
               const fs = await import("node:fs");
 
-              // Get changed files
+              // Get changed files (includes both modified tracked files and untracked files)
               let changedFiles = "";
-              await exec.exec("git", ["--no-pager", "diff", "--name-only"], {
+              await exec.exec("git", ["status", "--porcelain"], {
                 listeners: {
                   stdout: (data) => {
                     changedFiles += data.toString();
@@ -58,9 +58,13 @@ jobs:
                 },
               });
 
+              // Parse git status output to extract filenames
+              // Format: "XY filename" where XY is status code (e.g., " M", "??")
               const files = changedFiles
                 .trim()
                 .split("\n")
+                .filter((line) => line.length > 0)
+                .map((line) => line.substring(3).trim()) // Remove status code and space
                 .filter((f) => f.length > 0);
 
               if (files.length > 0) {
