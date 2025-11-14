@@ -26,7 +26,7 @@ export function yamlToWfTemplate(yaml: string) {
     #!/usr/bin/env -S node --no-warnings
     import { workflow } from "@jlarky/gha-ts/workflow-types";
     import { lines } from "@jlarky/gha-ts/utils";
-    
+
     import { generateWorkflowYaml } from "./utils/yaml.ts";
 
     COMMENTS_PLACEHOLDER
