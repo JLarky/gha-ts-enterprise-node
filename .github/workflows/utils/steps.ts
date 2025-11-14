@@ -2,6 +2,7 @@ import {
   buildWith,
   type CheckoutOptions,
   type SetupNodeOptions,
+  type GitHubScriptOptions,
 } from "@jlarky/gha-ts/actions";
 import { uses, type UsesStep } from "@jlarky/gha-ts/workflow-types";
 
@@ -17,4 +18,8 @@ export function checkoutStep(options: CheckoutOptions = {}): UsesStep {
 
 export function setupNodeStep(options: SetupNodeOptions = {}): UsesStep {
   return uses(actionVersions["actions/setup-node@v5"], buildWith(options));
+}
+
+export function githubScriptStep(options: GitHubScriptOptions = {}): UsesStep {
+  return uses(actionVersions["actions/github-script@v8"], buildWith(options));
 }
