@@ -68,11 +68,31 @@ const wf = workflow({
 
               // Parse git status output to extract filenames
               // Format: "XY filename" where XY is status code (e.g., " M", "??")
+              // For renames: "R  old -> new" or "R100 old -> new" -> extract only "new"
               const files = changedFiles
                 .trim()
                 .split("\n")
                 .filter((line) => line.length > 0)
-                .map((line) => line.substring(3).trim()) // Remove status code and space
+                .map((line) => {
+                  // Remove status code (first 2 chars + space = 3 chars minimum)
+                  // For renames with similarity: "R100 old -> new" (status can be longer)
+                  // So we remove up to the first space after status code
+                  const firstSpaceIndex = line.indexOf(" ", 2);
+                  if (firstSpaceIndex === -1) {
+                    return "";
+                  }
+                  const afterStatus = line
+                    .substring(firstSpaceIndex + 1)
+                    .trim();
+                  // Check if this is a rename entry (contains " -> ")
+                  const renameMatch = afterStatus.match(/^.+ -> (.+)$/);
+                  if (renameMatch && renameMatch[1]) {
+                    // Extract only the new filename after " -> "
+                    return renameMatch[1];
+                  }
+                  // For non-rename entries, return the filename as-is
+                  return afterStatus;
+                })
                 .filter((f) => f.length > 0);
 
               if (files.length > 0) {

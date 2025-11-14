@@ -49,8 +49,11 @@ const wf = workflow({
           name: "Verify if TS workflows are converted",
           run: lines`
             # Get changed files (includes both modified tracked files and untracked files)
-            # Parse git status output to extract filenames (remove status code prefix)
-            CHANGED="$(git status --porcelain | sed 's/^.. //')";
+            # Parse git status output to extract filenames
+            # Handle renames: "R  old -> new" or "R100 old -> new" -> extract only "new"
+            # For other entries: "XY filename" -> extract "filename"
+            # First remove status code (first 2 chars + space), then handle rename format
+            CHANGED="$(git status --porcelain | sed -E 's/^.. //' | sed -E 's/.* -> //')";
             if [ -n "$CHANGED" ]; then
               echo "::error title=TS workflows are not up to date::Run 'mise run wf-build' locally, commit, and push.";
               echo "::group::Changed files";
